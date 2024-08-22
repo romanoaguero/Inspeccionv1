@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interactivo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-search@2.9.9/dist/leaflet-search.min.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <!-- Se agrega titulo e favicon -->
+    <link rel="shortcut icon" href="images/favicon.png">
+    <title> Control de Usurpaciociones </title>
+    
+    <style>
+         
+        
+        /* Estilo para la imagen de cambio de capa */
+        #layerToggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000; /* Asegura que la imagen esté sobre el mapa */
+            cursor: pointer;
+        }
+
+        #layerToggle img {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Colores personalizados */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --text-color: #343a40;
+            --light-gray: #f0f0f0;
+            --dark-gray: #6c757d;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+        }
+
+        #map {
+            width: 100%;
+            height: 50vh;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .form-control[readonly] {
+            background-color: var(--light-gray);
+            border-color: var(--dark-gray);
+        }
+
+        textarea.form-control {
+            resize: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+    </style>
+  
+</head>
+<body>
+    <div id="map"></div>
+    <div id="layerToggle">
+        <img src="css/images/layers-2x.png" alt="Toggle Layer">
+    </div>
+    <div class="container">
+        <form id="dataForm" class="form-container" method="POST" enctype="multipart/form-data">
+              <!-- Sección de Login -->
+              <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5 class="text-center mb-3">Login</h5>
+                    <div class="form-group">
+                        <label for="username">Usuario:</label>
+                        <input type="text" id="username" name="username" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña:</label>
+                        <input type="password" id="password" name="password" class="form-control">
+                    </div>
+                    <div class="text-center">
+                        <button type="button" id="loginBtn" class="btn btn-primary">Iniciar Sesión</button>
+                    </div>
+                </div>
+            </div>
+                                     
+                <!-- Sección 1 -->
+                <div class="row">  
+                <div class="col-md-6 mb-4">
+                    <h5 class="text-center mb-3">Info. Area Inspeccionar</h5>
+                    <div class="form-group">
+                        <label for="search">Buscar Nombre:</label>
+                        <select id="search" name="search" class="form-control">
+                            <option value="">Seleccione un nombre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id">ID:</label>
+                        <input type="text" id="id" name="id" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="padron">Padrón:</label>
+                        <input type="text" id="padron" name="padron" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombre">Nombre:</label>
+                        <input type="text" id="nombre" name="nombre" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="dominio">Dominio:</label>
+                        <input type="text" id="dominio" name="dominio" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="propietario">Propietario:</label>
+                        <input type="text" id="propietario" name="propietario" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="estadoObra">Estado Obra:</label>
+                        <input type="text" id="estadoObra" name="estadoObra" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="vivInf">Viviendas Inf:</label>
+                        <input type="text" id="vivInf" name="vivInf" class="form-control" readonly>
+                    </div>       
+                </div>
+
+                <!-- Sección 2 -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="text-center mb-3">Info. del Relevamiento</h5>
+
+                    <div class="form-group">
+                        <label for="Nom_Inspector">Nombre/Apellido:</label>
+                        <input type="text" id="nameField" name="Nom_Inspector" class="form-control" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fecha2">Fecha de Visita:</label>
+                        <input type="date" id="fecha2" name="fecha2" class="form-control"  readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="horaActual">Hora de Visita:</label>
+                        <input type="time" id="horaActual" name="horaActual" class="form-control"  readonly>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="latitud">Latitud:</label>
+                        <input type="text" id="latitud" name="latitud" class="form-control" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="longitud">Longitud:</label>
+                        <input type="text" id="longitud" name="longitud" class="form-control" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="Espacio_Tomado">Espacio Tomado:</label>
+                        <select id="Espacio_Tomado" name="Espacio_Tomado" class="form-control"  readonly required>
+                            <option value="">Seleccione una opción</option>
+                            <option value="Si">Si</option>
+                            <option value="No">No</option>
+                     
+                        </select>
+                    </div>                  
+                                      
+                    <div class="form-group">
+                        <label for="observacion">Observación:</label>
+                        <textarea id="observacion" name="observacion" rows="4" class="form-control"  readonly required></textarea>
+                    </div>
+
+
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" id="submitBtn" class="btn btn-primary" disabled>Enviar</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet-search@2.9.9/dist/leaflet-search.min.js"></script>
+    <script src="data/PROYECTOSINSPECCIONcopiar_2.js"></script>
+    <script src="js/users.js"></script>
+
+    
+
+    <script>
+        var map = L.map('map').setView([-26.772, -65.198], 13);
+
+        var googleSat = L.tileLayer('https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i{z}!2i{x}!3i{y}!4i256!2m3!1e0!2sm!3i690435309!3m17!2ses!3sUS!5e18!12m4!1e68!2m2!1sset!2sRoadmap!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcy5lOmd8cC5jOiMxZDJjNGQscy5lOmwudC5mfHAuYzojOGVjM2I5LHMuZTpsLnQuc3xwLmM6IzFhMzY0NixzLnQ6MTd8cy5lOmcuc3xwLmM6IzRiNjg3OCxzLnQ6MjF8cy5lOmwudC5mfHAuYzojNjQ3NzllLHMudDoxOHxzLmU6Zy5zfHAuYzojNGI2ODc4LHMudDo4MXxzLmU6Zy5zfHAuYzojMzM0ZTg3LHMudDo4MnxzLmU6Z3xwLmM6IzAyM2U1OCxzLnQ6MnxzLmU6Z3xwLmM6IzI4M2Q2YSxzLnQ6MnxzLmU6bC50LmZ8cC5jOiM2ZjliYTUscy50OjJ8cy5lOmwudC5zfHAuYzojMWQyYzRkLHMudDo0MHxzLmU6Zy5mfHAuYzojMDIzZTU4LHMudDo0MHxzLmU6bC50LmZ8cC5jOiMzQzc2ODAscy50OjN8cy5lOmd8cC5jOiMzMDRhN2Qscy50OjN8cy5lOmwudC5mfHAuYzojOThhNWJlLHMudDozfHMuZTpsLnQuc3xwLmM6IzFkMmM0ZCxzLnQ6NDl8cy5lOmd8cC5jOiMyYzY2NzUscy50OjQ5fHMuZTpnLnN8cC5jOiMyNTU3NjMscy50OjQ5fHMuZTpsLnQuZnxwLmM6I2IwZDVjZSxzLnQ6NDl8cy5lOmwudC5zfHAuYzojMDIzZTU4LHMudDo0fHMuZTpsLnQuZnxwLmM6Izk4YTViZSxzLnQ6NHxzLmU6bC50LnN8cC5jOiMxZDJjNGQscy50OjY1fHMuZTpnLmZ8cC5jOiMyODNkNmEscy50OjY2fHMuZTpnfHAuYzojM2E0NzYyLHMudDo2fHMuZTpnfHAuYzojMGUxNjI2LHMudDo2fHMuZTpsLnQuZnxwLmM6IzRlNmQ3MA!4e0', {
+            maxZoom: 20,
+            attribution: 'Google'
+        }).addTo(map);
+
+        var googleStreet = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            attribution: 'Google'
+        });
+
+        var currentBaseLayer = 'satellite';
+
+        document.getElementById('layerToggle').addEventListener('click', function() {
+            if (currentBaseLayer === 'satellite') {
+                map.removeLayer(googleSat);
+                map.addLayer(googleStreet);
+                currentBaseLayer = 'street';
+            } else {
+                map.removeLayer(googleStreet);
+                map.addLayer(googleSat);
+                currentBaseLayer = 'satellite';
+            }
+        });
+
+
+        var layer_PROYECTOSINSPECCIONcopiar_2 = L.geoJson(json_PROYECTOSINSPECCIONcopiar_2, 
+        { style: function (feature) {
+        return {
+            color: 'rgba(0, 255, 64)',  // Color del borde
+            weight: 1,         // Grosor del borde
+            opacity: 1,        // Opacidad del borde
+            fillColor: '#3388ff',  // Color de relleno
+            fillOpacity: 0.5   // Opacidad del relleno
+        };
+    },
+    onEachFeature: function (feature, layer) {
+        layer.on('click', function (e) {
+            updateFormFields(feature.properties);
+        });
+    }
+        }).addTo(map);
+
+        function updateFormFields(properties) {
+            document.getElementById('nombre').value = properties.NOMBRE || '';
+            document.getElementById('padron').value = properties['PADRÓN'] || '';
+            document.getElementById('dominio').value = properties.DOMINIO || '';
+            document.getElementById('propietario').value = properties.PROPIETARI || '';
+            document.getElementById('estadoObra').value = properties['ESTADO OBR'] || '';
+            document.getElementById('vivInf').value = properties['VIV INF'] || '';
+            document.getElementById('id').value = properties.ID || '';
+        }
+
+        var searchControl = new L.Control.Search({
+            layer: layer_PROYECTOSINSPECCIONcopiar_2,
+            propertyName: 'NOMBRE',
+            initial: false,
+            moveToLocation: function (latlng, title, map) {
+                map.setView(latlng, 17);
+            }
+        });
+
+        searchControl.on('search:locationfound', function(e) {
+            updateFormFields(e.layer.feature.properties);
+        });
+
+        map.addControl(searchControl);
+
+        // Fill dropdown with options from the geoJSON data
+        json_PROYECTOSINSPECCIONcopiar_2.features.forEach(function(feature) {
+            var option = document.createElement("option");
+            option.value = feature.properties.NOMBRE;
+            option.text = feature.properties.NOMBRE;
+            document.getElementById('search').appendChild(option);
+        });
+
+        document.getElementById('search').addEventListener('change', function() {
+            var selectedName = this.value;
+            layer_PROYECTOSINSPECCIONcopiar_2.eachLayer(function(layer) {
+                if (layer.feature.properties.NOMBRE === selectedName) {
+                    map.setView(layer.getBounds().getCenter(), 17);
+                    updateFormFields(layer.feature.properties);
+                }
+            });
+        });
+
+        var marker;
+        map.on('click', function (e) {
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            marker = L.marker(e.latlng).addTo(map);
+            document.getElementById('latitud').value = e.latlng.lat;
+            document.getElementById('longitud').value = e.latlng.lng;
+        });
+
+        // Establecer la fecha actual en los campos de fecha y hora 
+        var currentDate = new Date().toISOString().split('T')[0];
+        var currentTime = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        
+        document.getElementById('fecha2').value = currentDate;
+        document.getElementById('horaActual').value = currentTime;
+    </script>
+
+<script>
+    document.getElementById('loginBtn').addEventListener('click', function() {
+        var username = document.getElementById('username').value;
+        var password = document.getElementById('password').value;
+
+        // Busca el usuario en el array importado desde users.js
+        var user = users.find(user => user.username === username && user.password === password);
+        
+        if (user) {
+            // Oculta la sección de login
+            var loginSection = document.querySelector('.row.mb-4');
+            loginSection.parentNode.removeChild(loginSection);
+
+            // Rellena el campo de nombre con el nombre del usuario
+            document.getElementById('nameField').value = user.name;
+
+            // Desbloquea los campos especificados
+            var fieldsToUnlock = ['fecha2', 'horaActual', 'Espacio_Tomado', 'observacion'];
+            fieldsToUnlock.forEach(function(fieldId) {
+                var field = document.getElementById(fieldId);
+                field.removeAttribute('readonly');
+                field.removeAttribute('disabled');
+                field.style.backgroundColor = 'white';
+            });
+
+            // Activa el botón de envío sin cambiar su color de fondo
+            var submitBtn = document.getElementById('submitBtn');
+            submitBtn.removeAttribute('disabled');
+        } else {
+            alert('Usuario o contraseña incorrectos');
+        }
+    });
+</script>
+
+<script>
+    // URL del Google Apps Script
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzD67W_lrxJ7gmzgL047_fE4EC7jp88PDkJ48eThefU_vOsmfR2L4GpOxdNFX0nkaqCdw/exec';
+    const form = document.forms['dataForm'];
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        // Validar los campos de latitud y longitud
+        const latField = form.querySelector('input[name="latitud"]');
+        const lonField = form.querySelector('input[name="longitud"]');
+
+        if (!latField.value || !lonField.value) {
+            alert('Ubica un punto dentro del mapa.');
+            return; // No enviar el formulario si faltan datos
+        }
+
+        // Mostrar mensaje "Enviando formulario..."
+        submitButton.innerText = 'Enviando formulario...';
+        submitButton.disabled = true;
+
+        // Envío del formulario
+        fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+            .then(response => response.json())
+            .then(result => {
+                if (result.result === 'success') {
+                    alert('El formulario se envió con éxito.');
+
+                    // Restaurar el texto del botón y activar después de mostrar la alerta
+                    submitButton.innerText = 'Enviar Encuesta';
+                    submitButton.disabled = false;
+
+                    // Actualizar el formulario
+                    form.reset();
+
+                    // Recargar la página después de un breve retraso
+                    setTimeout(() => {
+                        location.reload();  // Recarga la página
+                    }, 500);  // Espera de 500ms antes de recargar la página (opcional)
+                } else {
+                    throw new Error(result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error!', error.message);
+                alert('Hubo un error al enviar el formulario. Por favor, inténtalo de nuevo.');
+
+                // Restaurar el texto del botón y activar en caso de error
+                submitButton.innerText = 'Enviar Encuesta';
+                submitButton.disabled = false;
+            });
+    });
+</script>
+</body>
+</html>
