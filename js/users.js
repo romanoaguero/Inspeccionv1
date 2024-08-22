@@ -1,19 +1,19 @@
 // users.js
 const users = [
     {
-        username: "admin",
+        username: "Admin",
         password: "123",
         name: "Administrador"
     },
     {
-        username: "user1",
-        password: "pass1",
-        name: "Usuario Uno"
+        username: "Planeamiento",
+        password: "plani2024",
+        name: ""
     },
     {
-        username: "Bruno123",
-        password: "123",
-        name: "Bruno Romano"
+        username: "Areatec",
+        password: "pas123",
+        name: ""
     }
     // Añade más usuarios aquí
 ];
