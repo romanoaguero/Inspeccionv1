@@ -158,7 +158,7 @@
 
                     <div class="form-group">
                         <label for="Nom_Inspector">Nombre/Apellido:</label>
-                        <input type="text" id="nameField" name="Nom_Inspector" class="form-control" required>
+                        <input type="text" id="nameField" name="Nom_Inspector" class="form-control" required >
                     </div>
 
                     <div class="form-group">
@@ -195,6 +195,11 @@
                         <textarea id="observacion" name="observacion" rows="4" class="form-control"  readonly required></textarea>
                     </div>
 
+                     <!-- Campo para subir fotos -->
+                     <div class="form-group">
+                        <label for="photos">Tomar Fotos:</label>
+                        <input type="file" id="photos" name="photos" accept="image/*" capture="camera" multiple class="form-control-file">
+                    </div>
 
                 </div>
             </div>
@@ -330,7 +335,7 @@
         if (user) {
             // Oculta la sección de login
             var loginSection = document.querySelector('.row.mb-4');
-            loginSection.parentNode.removeChild(loginSection);
+            loginSection.style.display = 'none';
 
             // Rellena el campo de nombre con el nombre del usuario
             document.getElementById('nameField').value = user.name;
@@ -344,9 +349,14 @@
                 field.style.backgroundColor = 'white';
             });
 
-            // Activa el botón de envío sin cambiar su color de fondo
+            // Activa el botón de envío
             var submitBtn = document.getElementById('submitBtn');
-            submitBtn.removeAttribute('disabled');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-secondary');
+            submitBtn.classList.add('btn-primary');
+
+            // Opcional: Muestra un mensaje de éxito
+            alert('Inicio de sesión exitoso. Ahora puedes completar y enviar el formulario.');
         } else {
             alert('Usuario o contraseña incorrectos');
         }
@@ -354,45 +364,63 @@
 </script>
 
 <script>
-    // URL del Google Apps Script
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzD67W_lrxJ7gmzgL047_fE4EC7jp88PDkJ48eThefU_vOsmfR2L4GpOxdNFX0nkaqCdw/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz-U2RVI6eD764icgIloLYwI6p0e_TLnxNkNhsmvQwrCsN7FbEaN8qZ4Ufc_DLhhQ7u/exec';
     const form = document.forms['dataForm'];
     const submitButton = form.querySelector('button[type="submit"]');
 
     form.addEventListener('submit', e => {
         e.preventDefault();
 
-        // Validar los campos de latitud y longitud
         const latField = form.querySelector('input[name="latitud"]');
         const lonField = form.querySelector('input[name="longitud"]');
 
         if (!latField.value || !lonField.value) {
             alert('Ubica un punto dentro del mapa.');
-            return; // No enviar el formulario si faltan datos
+            return;
         }
 
-        // Mostrar mensaje "Enviando formulario..."
         submitButton.innerText = 'Enviando formulario...';
         submitButton.disabled = true;
 
-        // Envío del formulario
-        fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+        const formData = new FormData(form);
+
+        // Manejar las imágenes
+        const photosInput = document.getElementById('photos');
+        const photoPromises = [];
+
+        for (let i = 0; i < photosInput.files.length; i++) {
+            const file = photosInput.files[i];
+            const promise = new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    resolve(reader.result);
+                }
+                reader.readAsDataURL(file);
+            });
+            photoPromises.push(promise);
+        }
+
+        Promise.all(photoPromises).then(photoDataUrls => {
+            formData.delete('photos'); // Eliminar el input de archivos original
+            photoDataUrls.forEach((dataUrl, index) => {
+                formData.append(`photo${index + 1}`, dataUrl);
+            });
+            sendFormData(formData);
+        });
+    });
+
+    function sendFormData(formData) {
+        fetch(scriptURL, { method: 'POST', body: formData })
             .then(response => response.json())
             .then(result => {
                 if (result.result === 'success') {
                     alert('El formulario se envió con éxito.');
-
-                    // Restaurar el texto del botón y activar después de mostrar la alerta
                     submitButton.innerText = 'Enviar Encuesta';
                     submitButton.disabled = false;
-
-                    // Actualizar el formulario
                     form.reset();
-
-                    // Recargar la página después de un breve retraso
                     setTimeout(() => {
-                        location.reload();  // Recarga la página
-                    }, 500);  // Espera de 500ms antes de recargar la página (opcional)
+                        location.reload();
+                    }, 500);
                 } else {
                     throw new Error(result.error);
                 }
@@ -400,12 +428,10 @@
             .catch(error => {
                 console.error('Error!', error.message);
                 alert('Hubo un error al enviar el formulario. Por favor, inténtalo de nuevo.');
-
-                // Restaurar el texto del botón y activar en caso de error
                 submitButton.innerText = 'Enviar Encuesta';
                 submitButton.disabled = false;
             });
-    });
+    }
 </script>
 </body>
 </html>
