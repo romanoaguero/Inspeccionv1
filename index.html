@@ -325,42 +325,42 @@
     </script>
 
 <script>
-    document.getElementById('loginBtn').addEventListener('click', function() {
-        var username = document.getElementById('username').value;
-        var password = document.getElementById('password').value;
+   document.getElementById('loginBtn').addEventListener('click', function() {
+    var username = document.getElementById('username').value.trim().toLowerCase();
+    var password = document.getElementById('password').value;
 
-        // Busca el usuario en el array importado desde users.js
-        var user = users.find(user => user.username === username && user.password === password);
-        
-        if (user) {
-            // Oculta la sección de login
-            var loginSection = document.querySelector('.row.mb-4');
-            loginSection.style.display = 'none';
+    // Busca el usuario en el array importado desde users.js
+    var user = users.find(user => user.username.toLowerCase() === username && user.password === password);
+    
+    if (user) {
+        // Oculta la sección de login
+        var loginSection = document.querySelector('.row.mb-4');
+        loginSection.style.display = 'none';
 
-            // Rellena el campo de nombre con el nombre del usuario
-            document.getElementById('nameField').value = user.name;
+        // Rellena el campo de nombre con el nombre del usuario
+        document.getElementById('nameField').value = user.name;
 
-            // Desbloquea los campos especificados
-            var fieldsToUnlock = ['fecha2', 'horaActual', 'Espacio_Tomado', 'observacion'];
-            fieldsToUnlock.forEach(function(fieldId) {
-                var field = document.getElementById(fieldId);
-                field.removeAttribute('readonly');
-                field.removeAttribute('disabled');
-                field.style.backgroundColor = 'white';
-            });
+        // Desbloquea los campos especificados
+        var fieldsToUnlock = ['fecha2', 'horaActual', 'Espacio_Tomado', 'observacion'];
+        fieldsToUnlock.forEach(function(fieldId) {
+            var field = document.getElementById(fieldId);
+            field.removeAttribute('readonly');
+            field.removeAttribute('disabled');
+            field.style.backgroundColor = 'white';
+        });
 
-            // Activa el botón de envío
-            var submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('btn-secondary');
-            submitBtn.classList.add('btn-primary');
+        // Activa el botón de envío
+        var submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-secondary');
+        submitBtn.classList.add('btn-primary');
 
-            // Opcional: Muestra un mensaje de éxito
-            alert('Inicio de sesión exitoso. Ahora puedes completar y enviar el formulario.');
-        } else {
-            alert('Usuario o contraseña incorrectos');
-        }
-    });
+        // Opcional: Muestra un mensaje de éxito
+        alert('Inicio de sesión exitoso. Ahora puedes completar y enviar el formulario.');
+    } else {
+        alert('Usuario o contraseña incorrectos');
+    }
+});
 </script>
 
 <script>
